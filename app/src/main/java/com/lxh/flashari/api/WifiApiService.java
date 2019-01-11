@@ -16,4 +16,7 @@ public interface WifiApiService {
     @GET
     Call<String> getThumbnails(@Url String url);
 
+    @GET
+    Call<String> getFile(@Url String url);
+
 }

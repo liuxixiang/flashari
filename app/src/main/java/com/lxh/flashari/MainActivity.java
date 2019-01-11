@@ -1,5 +1,6 @@
 package com.lxh.flashari;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
@@ -17,11 +18,13 @@ import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
+import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.lxh.flashari.adapter.ThumbnailAdapter;
 import com.lxh.flashari.api.ApiManager;
 import com.lxh.flashari.bean.NameValuePair;
 import com.lxh.flashari.bean.NumberofItems;
 import com.lxh.flashari.bean.ThumbnailBean;
+import com.lxh.flashari.ui.ImageViewActivity;
 import com.lxh.flashari.utils.FlashAirFileInfo;
 import com.lxh.flashari.utils.FlashAirUtils;
 import com.lxh.flashari.utils.Logger;
@@ -87,8 +90,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void getThumbnails(List<FlashAirFileInfo> fileInfos) {
-
         ThumbnailAdapter thumbnailAdapter = new ThumbnailAdapter(this,fileInfos);
+        thumbnailAdapter.setOnItemClickListener(new BaseQuickAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(BaseQuickAdapter adapter, View view, int position) {
+                FlashAirFileInfo flashAirFileInfo = (FlashAirFileInfo) adapter.getItem(position);
+                Intent mIntent = new Intent(MainActivity.this,ImageViewActivity.class);
+                mIntent.putExtra("flashAirFileInfo",flashAirFileInfo);
+                startActivity(mIntent);
+            }
+        });
         mRecyclerView.setAdapter(thumbnailAdapter);
 
     }
@@ -106,12 +117,12 @@ public class MainActivity extends AppCompatActivity {
                     if(fileList != null ) {
 
                         for (FlashAirFileInfo flashAirFileInfo : fileList) {
-                            if (!TextUtils.isEmpty(flashAirFileInfo.mFileName)) {
-                                if ((flashAirFileInfo.mFileName.toLowerCase(Locale.getDefault()).endsWith(".jpg"))
-                                        || (flashAirFileInfo.mFileName.toLowerCase(Locale.getDefault()).endsWith(".jpeg"))) {
+                            if (!TextUtils.isEmpty(flashAirFileInfo.getFileName())) {
+                                if ((flashAirFileInfo.getFileName().toLowerCase(Locale.getDefault()).endsWith(".jpg"))
+                                        || (flashAirFileInfo.getFileName().toLowerCase(Locale.getDefault()).endsWith(".jpeg"))) {
                                     mFileInfos.add(flashAirFileInfo);
                                 }else {
-                                    getFiles(dir+"/"+flashAirFileInfo.mFileName);
+                                    getFiles(dir+"/"+flashAirFileInfo.getFileName());
                                 }
                             }
                         }
