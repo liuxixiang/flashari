@@ -1,22 +1,34 @@
 package com.lxh.flashari;
 
+import android.annotation.TargetApi;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
+import android.net.ConnectivityManager;
+import android.net.LinkProperties;
+import android.net.Network;
+import android.net.NetworkCapabilities;
+import android.net.NetworkInfo;
+import android.net.NetworkRequest;
 import android.os.AsyncTask;
+import android.os.Build;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.lxh.flashari.adapter.ThumbnailAdapter;
@@ -29,6 +41,12 @@ import com.lxh.flashari.utils.FlashAirFileInfo;
 import com.lxh.flashari.utils.FlashAirUtils;
 import com.lxh.flashari.utils.Logger;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -51,6 +69,24 @@ public class MainActivity extends AppCompatActivity {
     private WeakHashMap<String, Call<String>> mFileCalls = new WeakHashMap<>();
     private List<FlashAirFileInfo> mFileInfos = new ArrayList();
 
+    ConnectivityManager connectivityManager;
+
+    private static final int CHANGE_UI = 1;
+    private static final int ERROR = 2;
+
+    //主线程创建消息处理器
+    private Handler handler = new Handler() {
+        public void handleMessage(android.os.Message msg) {
+            if (msg.what == CHANGE_UI) {
+                Bitmap bitmap = (Bitmap) msg.obj;
+                Log.e("test", "bitmap===" + bitmap);
+            } else if (msg.what == ERROR) {
+                Toast.makeText(MainActivity.this, "访问失败", Toast.LENGTH_SHORT).show();
+            }
+        }
+
+        ;
+    };
 
 
     @Override
@@ -90,13 +126,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void getThumbnails(List<FlashAirFileInfo> fileInfos) {
-        ThumbnailAdapter thumbnailAdapter = new ThumbnailAdapter(this,fileInfos);
+        ThumbnailAdapter thumbnailAdapter = new ThumbnailAdapter(this, fileInfos);
         thumbnailAdapter.setOnItemClickListener(new BaseQuickAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(BaseQuickAdapter adapter, View view, int position) {
                 FlashAirFileInfo flashAirFileInfo = (FlashAirFileInfo) adapter.getItem(position);
-                Intent mIntent = new Intent(MainActivity.this,ImageViewActivity.class);
-                mIntent.putExtra("flashAirFileInfo",flashAirFileInfo);
+                Intent mIntent = new Intent(MainActivity.this, ImageViewActivity.class);
+                mIntent.putExtra("flashAirFileInfo", flashAirFileInfo);
                 startActivity(mIntent);
             }
         });
@@ -114,21 +150,21 @@ public class MainActivity extends AppCompatActivity {
                 if (response != null) {
                     String result = response.body();
                     List<FlashAirFileInfo> fileList = FlashAirUtils.getFileList(dir, result);
-                    if(fileList != null ) {
+                    if (fileList != null) {
 
                         for (FlashAirFileInfo flashAirFileInfo : fileList) {
                             if (!TextUtils.isEmpty(flashAirFileInfo.getFileName())) {
                                 if ((flashAirFileInfo.getFileName().toLowerCase(Locale.getDefault()).endsWith(".jpg"))
                                         || (flashAirFileInfo.getFileName().toLowerCase(Locale.getDefault()).endsWith(".jpeg"))) {
                                     mFileInfos.add(flashAirFileInfo);
-                                }else {
-                                    getFiles(dir+"/"+flashAirFileInfo.getFileName());
+                                } else {
+                                    getFiles(dir + "/" + flashAirFileInfo.getFileName());
                                 }
                             }
                         }
                     }
                 }
-                if(mFileCalls.size() == 0 ) {
+                if (mFileCalls.size() == 0) {
                     getThumbnails(mFileInfos);
                 }
             }
@@ -136,7 +172,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call<String> call, Throwable t) {
                 mFileCalls.remove(dir);
-                if(mFileCalls.size() == 0 ) {
+                if (mFileCalls.size() == 0) {
                     getThumbnails(mFileInfos);
                 }
             }
@@ -151,6 +187,8 @@ public class MainActivity extends AppCompatActivity {
 //        getFileCount();
         getFiles(dir);
     }
+
+
 
 
 }

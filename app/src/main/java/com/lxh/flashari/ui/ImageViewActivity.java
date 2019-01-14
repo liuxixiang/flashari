@@ -10,15 +10,21 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
+import com.lxh.flashari.MainActivity;
 import com.lxh.flashari.R;
 import com.lxh.flashari.api.ApiManager;
 import com.lxh.flashari.utils.FlashAirFileInfo;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class ImageViewActivity extends AppCompatActivity {
     ImageView imageView;
@@ -40,8 +46,10 @@ public class ImageViewActivity extends AppCompatActivity {
         if(mFlashAirFileInfo != null) {
             String fileName = mFlashAirFileInfo.getFileName();
             String directory = mFlashAirFileInfo.getDir();
-            downloadFile(fileName, directory);
+//            downloadFile(fileName, directory);
         }
+
+        getBaidu();
 
     }
 
@@ -90,4 +98,23 @@ public class ImageViewActivity extends AppCompatActivity {
 //        });
 
     }
+
+    private void getBaidu() {
+        Call<String> call = ApiManager.getInstance().getApiService().getBaidu("http://www.baidu.com");
+        call.enqueue(new Callback<String>() {
+            @Override
+            public void onResponse(Call<String> call, Response<String> response) {
+                if (response != null) {
+                    Toast.makeText(ImageViewActivity.this, response.body().toString(), Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<String> call, Throwable t) {
+                Toast.makeText(ImageViewActivity.this, t.getMessage(), Toast.LENGTH_LONG).show();
+
+            }
+        });
+    }
+
 }

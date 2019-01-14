@@ -19,4 +19,5 @@ public interface WifiApiService {
     @GET
     Call<String> getFile(@Url String url);
 
+
 }

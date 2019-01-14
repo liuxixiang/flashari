@@ -1,7 +1,9 @@
 package com.lxh.flashari.api;
 
+import android.app.Application;
 import android.util.Log;
 
+import com.lxh.flashari.MyApplication;
 import com.lxh.flashari.utils.Logger;
 
 import java.util.concurrent.TimeUnit;
@@ -58,10 +60,12 @@ public class ApiManager {
     }
 
     public ApiService getApiService() {
+        MyApplication.getInstance().setNetworkState(MyApplication.TRANSPORT_TYPE_CELLULAR);
         return mApiService;
     }
 
     public WifiApiService getWifiApiService() {
+        MyApplication.getInstance().setNetworkState(MyApplication.TRANSPORT_TYPE_WIFI);
         return mWifiApiService;
     }
 }
