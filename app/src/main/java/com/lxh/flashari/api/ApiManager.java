@@ -1,13 +1,18 @@
 package com.lxh.flashari.api;
 
-import android.app.Application;
-import android.util.Log;
-
+import com.github.pwittchen.reactivenetwork.library.rx2.Connectivity;
+import com.github.pwittchen.reactivenetwork.library.rx2.ReactiveNetwork;
 import com.lxh.flashari.MyApplication;
 import com.lxh.flashari.utils.Logger;
+import com.lxh.flashari.utils.NetWorkUtil;
+import com.lxh.flashari.rxjava.RxJavaUtils;
 
 import java.util.concurrent.TimeUnit;
 
+import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
+import io.reactivex.Observer;
+import io.reactivex.functions.Function;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
@@ -59,13 +64,27 @@ public class ApiManager {
         mWifiApiService = mRetrofit.newBuilder().baseUrl(BASE_WIFI_PATH).build().create(WifiApiService.class);
     }
 
+    //蜂窝数据
     public ApiService getApiService() {
-        MyApplication.getInstance().setNetworkState(MyApplication.TRANSPORT_TYPE_CELLULAR);
+        if (NetWorkUtil.getTransportType() != NetWorkUtil.TRANSPORT_TYPE_CELLULAR) {
+            NetWorkUtil.setTransportType(NetWorkUtil.TRANSPORT_TYPE_CELLULAR);
+        }
         return mApiService;
     }
 
+    //wifi sd 卡
     public WifiApiService getWifiApiService() {
-        MyApplication.getInstance().setNetworkState(MyApplication.TRANSPORT_TYPE_WIFI);
+        if (NetWorkUtil.getTransportType() != NetWorkUtil.TRANSPORT_TYPE_WIFI) {
+            NetWorkUtil.setTransportType(NetWorkUtil.TRANSPORT_TYPE_WIFI);
+        }
         return mWifiApiService;
     }
+
+    public <T> void sendHttp(Observable<T> observable, Observer<? super T> observer) {
+        ReactiveNetwork.observeNetworkConnectivity(MyApplication.getInstance())
+                .flatMap((Function<Connectivity, ObservableSource<T>>) connectivity -> observable)
+                .compose(RxJavaUtils.io_main())
+                .subscribe(observer);
+    }
+
 }

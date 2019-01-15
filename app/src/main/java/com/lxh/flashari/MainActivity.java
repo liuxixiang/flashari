@@ -1,59 +1,38 @@
 package com.lxh.flashari;
 
-import android.annotation.TargetApi;
-import android.content.Context;
+import android.annotation.SuppressLint;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.graphics.PorterDuff;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.ColorDrawable;
-import android.net.ConnectivityManager;
-import android.net.LinkProperties;
-import android.net.Network;
-import android.net.NetworkCapabilities;
-import android.net.NetworkInfo;
-import android.net.NetworkRequest;
-import android.os.AsyncTask;
-import android.os.Build;
-import android.os.Handler;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
-import android.widget.ListView;
-import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
+import com.github.pwittchen.reactivenetwork.library.rx2.Connectivity;
+import com.github.pwittchen.reactivenetwork.library.rx2.ReactiveNetwork;
 import com.lxh.flashari.adapter.ThumbnailAdapter;
 import com.lxh.flashari.api.ApiManager;
-import com.lxh.flashari.bean.NameValuePair;
-import com.lxh.flashari.bean.NumberofItems;
-import com.lxh.flashari.bean.ThumbnailBean;
+import com.lxh.flashari.rxjava.CustomObserver;
+import com.lxh.flashari.rxjava.RxJavaUtils;
 import com.lxh.flashari.ui.ImageViewActivity;
 import com.lxh.flashari.utils.FlashAirFileInfo;
 import com.lxh.flashari.utils.FlashAirUtils;
 import com.lxh.flashari.utils.Logger;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.WeakHashMap;
 
+import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
+import io.reactivex.functions.Function;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -66,27 +45,8 @@ public class MainActivity extends AppCompatActivity {
     private String directoryName = rootDir;
     private TextView currentDirText;
     private TextView numFilesText;
-    private WeakHashMap<String, Call<String>> mFileCalls = new WeakHashMap<>();
+    private WeakHashMap<String, Observable<String>> mFileCalls = new WeakHashMap<>();
     private List<FlashAirFileInfo> mFileInfos = new ArrayList();
-
-    ConnectivityManager connectivityManager;
-
-    private static final int CHANGE_UI = 1;
-    private static final int ERROR = 2;
-
-    //主线程创建消息处理器
-    private Handler handler = new Handler() {
-        public void handleMessage(android.os.Message msg) {
-            if (msg.what == CHANGE_UI) {
-                Bitmap bitmap = (Bitmap) msg.obj;
-                Log.e("test", "bitmap===" + bitmap);
-            } else if (msg.what == ERROR) {
-                Toast.makeText(MainActivity.this, "访问失败", Toast.LENGTH_SHORT).show();
-            }
-        }
-
-        ;
-    };
 
 
     @Override
@@ -99,7 +59,21 @@ public class MainActivity extends AppCompatActivity {
         mRecyclerView = findViewById(R.id.recyclerView);
         mRecyclerView.setLayoutManager(new GridLayoutManager(this, 3));
 
+//        findViewById(R.id.textView1).setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                listRootDirectory();
+//            }
+//        });
+//
+//        findViewById(R.id.textView2).setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                getBaidu();
+//            }
+//        });
         listRootDirectory();
+        getBaidu();
     }
 
     private void listRootDirectory() {
@@ -108,69 +82,66 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void getFileCount() {
-        Call<String> call = ApiManager.getInstance().getWifiApiService().getImgsNum(directoryName);
-        call.enqueue(new Callback<String>() {
-            @Override
-            public void onResponse(Call<String> call, Response<String> response) {
-                if (response != null) {
-                    String fileCount = response.body();
-                    numFilesText.setText("Items Found: " + fileCount);
-                }
-            }
-
-            @Override
-            public void onFailure(Call<String> call, Throwable t) {
-
-            }
-        });
+        ApiManager.getInstance().sendHttp(ApiManager.getInstance().getWifiApiService().getImgsNum(directoryName),
+                new CustomObserver<String>() {
+                    @Override
+                    public void onNext(String s) {
+                        super.onNext(s);
+                        numFilesText.setText("Items Found: " + s);
+                        Toast.makeText(getApplicationContext(), s, Toast.LENGTH_LONG).show();
+                    }
+                });
     }
 
     private void getThumbnails(List<FlashAirFileInfo> fileInfos) {
         ThumbnailAdapter thumbnailAdapter = new ThumbnailAdapter(this, fileInfos);
-        thumbnailAdapter.setOnItemClickListener(new BaseQuickAdapter.OnItemClickListener() {
-            @Override
-            public void onItemClick(BaseQuickAdapter adapter, View view, int position) {
-                FlashAirFileInfo flashAirFileInfo = (FlashAirFileInfo) adapter.getItem(position);
-                Intent mIntent = new Intent(MainActivity.this, ImageViewActivity.class);
-                mIntent.putExtra("flashAirFileInfo", flashAirFileInfo);
-                startActivity(mIntent);
-            }
+        thumbnailAdapter.setOnItemClickListener((adapter, view, position) -> {
+            FlashAirFileInfo flashAirFileInfo = (FlashAirFileInfo) adapter.getItem(position);
+            Intent mIntent = new Intent(MainActivity.this, ImageViewActivity.class);
+            mIntent.putExtra("flashAirFileInfo", flashAirFileInfo);
+            startActivity(mIntent);
         });
         mRecyclerView.setAdapter(thumbnailAdapter);
 
     }
 
     private void getFiles(final String dir) {
-        Call<String> call = ApiManager.getInstance().getWifiApiService().getListDCIM(ApiManager.BASE_WIFI_PATH + "/command.cgi?op=100&DIR=" + dir);
-        mFileCalls.put(dir, call);
-        call.enqueue(new Callback<String>() {
+        Observable<String> observable = ApiManager.getInstance().getWifiApiService().getListDCIM(ApiManager.BASE_WIFI_PATH + "/command.cgi?op=100&DIR=" + dir);
+        ApiManager.getInstance().sendHttp(observable, new CustomObserver<String>() {
             @Override
-            public void onResponse(Call<String> call, Response<String> response) {
-                mFileCalls.remove(dir);
-                if (response != null) {
-                    String result = response.body();
-                    List<FlashAirFileInfo> fileList = FlashAirUtils.getFileList(dir, result);
-                    if (fileList != null) {
+            protected void onStart() {
+                super.onStart();
+                mFileCalls.put(dir, observable);
+            }
 
-                        for (FlashAirFileInfo flashAirFileInfo : fileList) {
-                            if (!TextUtils.isEmpty(flashAirFileInfo.getFileName())) {
-                                if ((flashAirFileInfo.getFileName().toLowerCase(Locale.getDefault()).endsWith(".jpg"))
-                                        || (flashAirFileInfo.getFileName().toLowerCase(Locale.getDefault()).endsWith(".jpeg"))) {
-                                    mFileInfos.add(flashAirFileInfo);
-                                } else {
-                                    getFiles(dir + "/" + flashAirFileInfo.getFileName());
-                                }
+            @Override
+            public void onNext(String s) {
+                super.onNext(s);
+                List<FlashAirFileInfo> fileList = FlashAirUtils.getFileList(dir, s);
+                if (fileList != null) {
+                    for (FlashAirFileInfo flashAirFileInfo : fileList) {
+                        if (!TextUtils.isEmpty(flashAirFileInfo.getFileName())) {
+                            if ((flashAirFileInfo.getFileName().toLowerCase(Locale.getDefault()).endsWith(".jpg"))
+                                    || (flashAirFileInfo.getFileName().toLowerCase(Locale.getDefault()).endsWith(".jpeg"))) {
+                                mFileInfos.add(flashAirFileInfo);
+                            } else {
+                                getFiles(dir + "/" + flashAirFileInfo.getFileName());
                             }
                         }
                     }
                 }
-                if (mFileCalls.size() == 0) {
-                    getThumbnails(mFileInfos);
-                }
+                this.onComplete();
             }
 
             @Override
-            public void onFailure(Call<String> call, Throwable t) {
+            public void onError(Throwable e) {
+                super.onError(e);
+                this.onComplete();
+            }
+
+            @Override
+            public void onComplete() {
+                super.onComplete();
                 mFileCalls.remove(dir);
                 if (mFileCalls.size() == 0) {
                     getThumbnails(mFileInfos);
@@ -188,7 +159,17 @@ public class MainActivity extends AppCompatActivity {
         getFiles(dir);
     }
 
-
+    @SuppressLint("CheckResult")
+    private void getBaidu() {
+        ApiManager.getInstance().sendHttp(ApiManager.getInstance().getApiService().getBaidu("http://www.baidu.com"),
+                new CustomObserver<String>() {
+                    @Override
+                    public void onNext(String s) {
+                        super.onNext(s);
+                        Toast.makeText(getApplicationContext(), s, Toast.LENGTH_LONG).show();
+                    }
+                });
+    }
 
 
 }
