@@ -44,7 +44,7 @@ public class NetWorkUtil {
                 @Override
                 public void onAvailable(Network network) {
                     super.onAvailable(network);
-                    Log.e("lxh","onAvailable===");
+                    Log.e("network","onAvailable===");
                     if (Build.VERSION.SDK_INT >= 23) {
                         connectivityManager.bindProcessToNetwork(network);
                     } else {

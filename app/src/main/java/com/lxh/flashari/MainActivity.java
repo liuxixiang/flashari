@@ -73,7 +73,6 @@ public class MainActivity extends AppCompatActivity {
 //            }
 //        });
         listRootDirectory();
-        getBaidu();
     }
 
     private void listRootDirectory() {
