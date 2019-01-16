@@ -20,6 +20,7 @@ import com.lxh.flashari.adapter.ThumbnailAdapter;
 import com.lxh.flashari.api.ApiManager;
 import com.lxh.flashari.rxjava.CustomObserver;
 import com.lxh.flashari.rxjava.RxJavaUtils;
+import com.lxh.flashari.service.WifiService;
 import com.lxh.flashari.ui.ImageViewActivity;
 import com.lxh.flashari.utils.FlashAirFileInfo;
 import com.lxh.flashari.utils.FlashAirUtils;
@@ -72,7 +73,12 @@ public class MainActivity extends AppCompatActivity {
 //                getBaidu();
 //            }
 //        });
-        listRootDirectory();
+//        listRootDirectory();
+        getBaidu();
+        getBaidu();
+        startService(new Intent(this,WifiService.class));
+        getBaidu();getBaidu();getBaidu();
+
     }
 
     private void listRootDirectory() {

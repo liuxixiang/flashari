@@ -4,7 +4,6 @@ import com.github.pwittchen.reactivenetwork.library.rx2.Connectivity;
 import com.github.pwittchen.reactivenetwork.library.rx2.ReactiveNetwork;
 import com.lxh.flashari.MyApplication;
 import com.lxh.flashari.utils.Logger;
-import com.lxh.flashari.utils.NetWorkUtil;
 import com.lxh.flashari.rxjava.RxJavaUtils;
 
 import java.util.concurrent.TimeUnit;
@@ -66,17 +65,11 @@ public class ApiManager {
 
     //蜂窝数据
     public ApiService getApiService() {
-        if (NetWorkUtil.getTransportType() != NetWorkUtil.TRANSPORT_TYPE_CELLULAR) {
-            NetWorkUtil.setTransportType(NetWorkUtil.TRANSPORT_TYPE_CELLULAR);
-        }
         return mApiService;
     }
 
     //wifi sd 卡
     public WifiApiService getWifiApiService() {
-        if (NetWorkUtil.getTransportType() != NetWorkUtil.TRANSPORT_TYPE_WIFI) {
-            NetWorkUtil.setTransportType(NetWorkUtil.TRANSPORT_TYPE_WIFI);
-        }
         return mWifiApiService;
     }
 

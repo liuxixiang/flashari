@@ -1,5 +1,10 @@
 package com.lxh.flashari.utils;
 
+import android.app.Application;
+import android.content.Context;
+
+import com.lxh.flashari.MyApplication;
+
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -50,5 +55,9 @@ public class Utils {
         } else {
             return b + "byte";
         }
+    }
+
+    public static Application getApp() {
+        return MyApplication.getInstance();
     }
 }

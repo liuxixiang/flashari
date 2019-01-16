@@ -25,7 +25,7 @@ public class ThumbnailAdapter extends BaseQuickAdapter<FlashAirFileInfo, BaseVie
     protected void convert(BaseViewHolder helper, final FlashAirFileInfo item) {
         item.setThumbnailUrl(IMG_URL + item.getDir() + "/" + item.getFileName());
         helper.setText(R.id.name, item.getFileName() + "");
-        ImageLoadUtils.loadWifi(helper.itemView.getContext(), item.getThumbnailUrl(), helper.getView(R.id.img));
+        ImageLoadUtils.load(helper.itemView.getContext(), item.getThumbnailUrl(), helper.getView(R.id.img));
     }
 
 }
