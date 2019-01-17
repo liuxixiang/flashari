@@ -31,7 +31,7 @@
             android:name=".service.WifiService"
             android:enabled="true"
             android:exported="true"
-            android:process=":remote" />
+            android:process=":wifi" />
     </application>
 
 </manifest>

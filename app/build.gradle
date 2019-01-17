@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply plugin: 'org.qiyi.svg.plugin'
 
 android {
     compileSdkVersion rootProject.compileSdkVersion
@@ -20,6 +21,10 @@ android {
         sourceCompatibility = '1.8'
         targetCompatibility = '1.8'
     }
+}
+
+dispatcher{
+    process ":wifi"
 }
 
 dependencies {
@@ -47,5 +52,6 @@ dependencies {
     implementation 'io.reactivex.rxjava2:rxandroid:2.1.0'
     implementation "com.squareup.retrofit2:adapter-rxjava2:$rootProject.retrofitVersion"
     implementation 'com.github.pwittchen:reactivenetwork-rx2:3.0.2'
-
+    implementation "org.qiyi.video.svg:core:1.1.8"
+    api project(":process_module")
 }

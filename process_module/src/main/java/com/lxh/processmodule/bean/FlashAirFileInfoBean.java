@@ -1,4 +1,4 @@
-package com.lxh.flashari.utils;
+package com.lxh.processmodule.bean;
 
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -6,7 +6,7 @@ import android.text.format.DateFormat;
 
 import java.util.Calendar;
 
-public class FlashAirFileInfo implements Parcelable {
+public class FlashAirFileInfoBean implements Parcelable {
 
     public static final int ATTR_MASK_ARCHIVE = 0x00000020;
     public static final int ATTR_MASK_DIRECTORY = 0x00000010;
@@ -28,7 +28,7 @@ public class FlashAirFileInfo implements Parcelable {
     private int second;
     private String date;
 
-    public FlashAirFileInfo(String info, String dir) {
+    public FlashAirFileInfoBean(String info, String dir) {
         int start;
         int end;
 
@@ -201,7 +201,7 @@ public class FlashAirFileInfo implements Parcelable {
         dest.writeString(this.date);
     }
 
-    protected FlashAirFileInfo(Parcel in) {
+    protected FlashAirFileInfoBean(Parcel in) {
         this.dir = in.readString();
         this.fileName = in.readString();
         this.size = in.readString();
@@ -216,15 +216,15 @@ public class FlashAirFileInfo implements Parcelable {
         this.date = in.readString();
     }
 
-    public static final Creator<FlashAirFileInfo> CREATOR = new Creator<FlashAirFileInfo>() {
+    public static final Creator<FlashAirFileInfoBean> CREATOR = new Creator<FlashAirFileInfoBean>() {
         @Override
-        public FlashAirFileInfo createFromParcel(Parcel source) {
-            return new FlashAirFileInfo(source);
+        public FlashAirFileInfoBean createFromParcel(Parcel source) {
+            return new FlashAirFileInfoBean(source);
         }
 
         @Override
-        public FlashAirFileInfo[] newArray(int size) {
-            return new FlashAirFileInfo[size];
+        public FlashAirFileInfoBean[] newArray(int size) {
+            return new FlashAirFileInfoBean[size];
         }
     };
 }

@@ -1,4 +1,4 @@
-package com.lxh.flashari.base;
+package com.lxh.flashari.common.base;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;

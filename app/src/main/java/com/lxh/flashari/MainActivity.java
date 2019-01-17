@@ -4,51 +4,32 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.os.RemoteException;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import com.chad.library.adapter.base.BaseQuickAdapter;
-import com.github.pwittchen.reactivenetwork.library.rx2.Connectivity;
-import com.github.pwittchen.reactivenetwork.library.rx2.ReactiveNetwork;
 import com.lxh.flashari.adapter.ThumbnailAdapter;
 import com.lxh.flashari.api.ApiManager;
+import com.lxh.flashari.common.BaseCallback;
 import com.lxh.flashari.rxjava.CustomObserver;
-import com.lxh.flashari.rxjava.RxJavaUtils;
 import com.lxh.flashari.service.WifiService;
 import com.lxh.flashari.ui.ImageViewActivity;
 import com.lxh.flashari.utils.FlashAirFileInfo;
-import com.lxh.flashari.utils.FlashAirUtils;
-import com.lxh.flashari.utils.Logger;
+import com.lxh.processmodule.IOperateWifiAidl;
 
-import java.util.ArrayList;
+import org.qiyi.video.svg.Andromeda;
+
 import java.util.List;
-import java.util.Locale;
-import java.util.WeakHashMap;
-
-import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
-import io.reactivex.functions.Function;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
 
     private RecyclerView mRecyclerView;
 
     private String rootDir = "DCIM";
-    private String directoryName = rootDir;
-    private TextView currentDirText;
-    private TextView numFilesText;
-    private WeakHashMap<String, Observable<String>> mFileCalls = new WeakHashMap<>();
-    private List<FlashAirFileInfo> mFileInfos = new ArrayList();
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,42 +41,20 @@ public class MainActivity extends AppCompatActivity {
         mRecyclerView = findViewById(R.id.recyclerView);
         mRecyclerView.setLayoutManager(new GridLayoutManager(this, 3));
 
-//        findViewById(R.id.textView1).setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                listRootDirectory();
-//            }
-//        });
-//
-//        findViewById(R.id.textView2).setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                getBaidu();
-//            }
-//        });
-//        listRootDirectory();
+        findViewById(R.id.textView1).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startService(new Intent(MainActivity.this, WifiService.class));
+            }
+        });
+
+        findViewById(R.id.textView2).setOnClickListener(v -> {
+                    useBuyAppleInShop();
+                }
+        );
+
         getBaidu();
-        getBaidu();
-        startService(new Intent(this,WifiService.class));
-        getBaidu();getBaidu();getBaidu();
 
-    }
-
-    private void listRootDirectory() {
-        directoryName = rootDir;
-        listDirectory(directoryName);
-    }
-
-    private void getFileCount() {
-        ApiManager.getInstance().sendHttp(ApiManager.getInstance().getWifiApiService().getImgsNum(directoryName),
-                new CustomObserver<String>() {
-                    @Override
-                    public void onNext(String s) {
-                        super.onNext(s);
-                        numFilesText.setText("Items Found: " + s);
-                        Toast.makeText(getApplicationContext(), s, Toast.LENGTH_LONG).show();
-                    }
-                });
     }
 
     private void getThumbnails(List<FlashAirFileInfo> fileInfos) {
@@ -110,60 +69,6 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void getFiles(final String dir) {
-        Observable<String> observable = ApiManager.getInstance().getWifiApiService().getListDCIM(ApiManager.BASE_WIFI_PATH + "/command.cgi?op=100&DIR=" + dir);
-        ApiManager.getInstance().sendHttp(observable, new CustomObserver<String>() {
-            @Override
-            protected void onStart() {
-                super.onStart();
-                mFileCalls.put(dir, observable);
-            }
-
-            @Override
-            public void onNext(String s) {
-                super.onNext(s);
-                List<FlashAirFileInfo> fileList = FlashAirUtils.getFileList(dir, s);
-                if (fileList != null) {
-                    for (FlashAirFileInfo flashAirFileInfo : fileList) {
-                        if (!TextUtils.isEmpty(flashAirFileInfo.getFileName())) {
-                            if ((flashAirFileInfo.getFileName().toLowerCase(Locale.getDefault()).endsWith(".jpg"))
-                                    || (flashAirFileInfo.getFileName().toLowerCase(Locale.getDefault()).endsWith(".jpeg"))) {
-                                mFileInfos.add(flashAirFileInfo);
-                            } else {
-                                getFiles(dir + "/" + flashAirFileInfo.getFileName());
-                            }
-                        }
-                    }
-                }
-                this.onComplete();
-            }
-
-            @Override
-            public void onError(Throwable e) {
-                super.onError(e);
-                this.onComplete();
-            }
-
-            @Override
-            public void onComplete() {
-                super.onComplete();
-                mFileCalls.remove(dir);
-                if (mFileCalls.size() == 0) {
-                    getThumbnails(mFileInfos);
-                }
-            }
-        });
-    }
-
-    public void listDirectory(String dir) {
-        // Prepare command directory path
-        currentDirText = findViewById(R.id.textView1);
-        currentDirText.setText(dir + "/");
-        numFilesText = findViewById(R.id.textView2);
-//        getFileCount();
-        getFiles(dir);
-    }
-
     @SuppressLint("CheckResult")
     private void getBaidu() {
         ApiManager.getInstance().sendHttp(ApiManager.getInstance().getApiService().getBaidu("http://www.baidu.com"),
@@ -174,6 +79,39 @@ public class MainActivity extends AppCompatActivity {
                         Toast.makeText(getApplicationContext(), s, Toast.LENGTH_LONG).show();
                     }
                 });
+    }
+
+
+    private void useBuyAppleInShop() {
+        //IBinder buyAppleBinder = Andromeda.getInstance().getRemoteService(IBuyApple.class);
+        IBinder buyAppleBinder = Andromeda.with(this).getRemoteService(IOperateWifiAidl.class);
+        if (null == buyAppleBinder) {
+            Toast.makeText(this, "buyAppleBinder is null! May be the service has been cancelled!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        IOperateWifiAidl operateWifi = IOperateWifiAidl.Stub.asInterface(buyAppleBinder);
+        if (null != operateWifi) {
+            try {
+                operateWifi.getAllSDFiles(rootDir, new BaseCallback() {
+                    @Override
+                    public void onSucceed(Bundle var1) {
+                        if(var1 != null && var1.containsKey("Thumbnails")) {
+                            List<FlashAirFileInfo> fileInfos = var1.getParcelableArrayList("Thumbnails");
+                            getThumbnails(fileInfos);
+                        }
+                    }
+
+                    @Override
+                    public void onFailed(String var1) {
+
+                    }
+                });
+//                Toast.makeText(BananaActivity.this, "got remote service in other process(:banana),appleNum:" + appleNum, Toast.LENGTH_SHORT).show();
+
+            } catch (RemoteException ex) {
+                ex.printStackTrace();
+            }
+        }
     }
 
 

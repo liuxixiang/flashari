@@ -12,6 +12,8 @@ import android.os.Build;
 import com.lxh.flashari.utils.Logger;
 import com.lxh.flashari.utils.ProcessUtils;
 
+import org.qiyi.video.svg.Andromeda;
+
 public class MyApplication extends Application {
     private static MyApplication myApplication = null;
 
@@ -19,8 +21,12 @@ public class MyApplication extends Application {
     public void onCreate() {
         super.onCreate();
         myApplication = this;
+        Andromeda.init(this);
         Logger.init();
         initNetwork();
+        Logger.tag("lxh").e("MyApplication-->onCreate(),pid:" + android.os.Process.myPid()
+                + ",processName:" + ProcessUtils.getCurrentProcessName() + ",isMainProcess:" + ProcessUtils.isMainProcess());
+
     }
 
     private void initNetwork() {
