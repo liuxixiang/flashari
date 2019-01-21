@@ -4,17 +4,21 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
-import android.os.RemoteException;
+import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.lxh.flashari.adapter.ThumbnailAdapter;
 import com.lxh.flashari.api.ApiManager;
-import com.lxh.flashari.common.BaseCallback;
+import com.lxh.flashari.common.config.Config;
+import com.lxh.flashari.common.event.EventConstants;
 import com.lxh.flashari.rxjava.CustomObserver;
 import com.lxh.flashari.service.WifiService;
 import com.lxh.flashari.ui.ImageViewActivity;
@@ -22,19 +26,34 @@ import com.lxh.flashari.utils.FlashAirFileInfo;
 import com.lxh.processmodule.IOperateWifiAidl;
 
 import org.qiyi.video.svg.Andromeda;
+import org.qiyi.video.svg.event.Event;
+import org.qiyi.video.svg.event.EventListener;
 
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements EventListener {
 
     private RecyclerView mRecyclerView;
 
     private String rootDir = "DCIM";
+    private Handler mHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            switch (msg.what) {
+                case 1:
+                    ((TextView)findViewById(R.id.textView1)).setText("sjkdfhjjasdf");
+                    getThumbnails((List<FlashAirFileInfo>) msg.obj);
+                    break;
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Andromeda.subscribe(EventConstants.THUMBNAILS_EVENT,MainActivity.this);
 
         getWindow().setTitleColor(Color.rgb(65, 183, 216));
 
@@ -52,8 +71,6 @@ public class MainActivity extends AppCompatActivity {
                     useBuyAppleInShop();
                 }
         );
-
-        getBaidu();
 
     }
 
@@ -92,27 +109,28 @@ public class MainActivity extends AppCompatActivity {
         IOperateWifiAidl operateWifi = IOperateWifiAidl.Stub.asInterface(buyAppleBinder);
         if (null != operateWifi) {
             try {
-                operateWifi.getAllSDFiles(rootDir, new BaseCallback() {
-                    @Override
-                    public void onSucceed(Bundle var1) {
-                        if(var1 != null && var1.containsKey("Thumbnails")) {
-                            List<FlashAirFileInfo> fileInfos = var1.getParcelableArrayList("Thumbnails");
-                            getThumbnails(fileInfos);
-                        }
-                    }
-
-                    @Override
-                    public void onFailed(String var1) {
-
-                    }
-                });
-//                Toast.makeText(BananaActivity.this, "got remote service in other process(:banana),appleNum:" + appleNum, Toast.LENGTH_SHORT).show();
-
-            } catch (RemoteException ex) {
+                operateWifi.getAllSDFiles(rootDir);
+            } catch (Exception ex) {
                 ex.printStackTrace();
             }
         }
     }
 
 
+    @Override
+    public void onNotify(Event event) {
+        if(EventConstants.THUMBNAILS_EVENT.equals(event.getName())) {
+            Log.e("flash","Thread" + Thread.currentThread());
+            Bundle bundle = event.getData();
+            if(bundle != null && bundle.containsKey(Config.KeyCode.KEY_THUMBNAILS)) {
+                List<FlashAirFileInfo> fileInfos = bundle.getParcelableArrayList(Config.KeyCode.KEY_THUMBNAILS);
+//                mHandler.obtainMessage(1,fileInfos);
+                Message message = new Message();
+                message.what = 1;
+                message.obj = fileInfos;
+                mHandler.sendMessage(message);
+
+            }
+        }
+    }
 }

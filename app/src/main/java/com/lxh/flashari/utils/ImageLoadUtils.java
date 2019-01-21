@@ -26,4 +26,11 @@ public class ImageLoadUtils {
             }
         });
     }
+
+    public static void load(Context context, byte[] bytes, ImageView imageView) {
+        Glide.with(context)
+                .asBitmap()
+                .load(bytes)
+                .into(imageView);
+    }
 }

@@ -2,12 +2,14 @@ package com.lxh.flashari.model;
 
 import android.text.TextUtils;
 
+import com.lxh.flashari.R;
 import com.lxh.flashari.api.ApiManager;
 import com.lxh.flashari.api.WifiApiService;
 import com.lxh.flashari.rxjava.CustomObserver;
 import com.lxh.flashari.utils.FlashAirFileInfo;
 import com.lxh.flashari.utils.FlashAirUtils;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -15,6 +17,7 @@ import java.util.WeakHashMap;
 
 import io.reactivex.Observable;
 import io.reactivex.disposables.CompositeDisposable;
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 
 public class OperateWifiModelImpl implements OperateWifiModel {
@@ -35,6 +38,34 @@ public class OperateWifiModelImpl implements OperateWifiModel {
     public void getAllSDFiles(String dir, OnLoadAllSDFilesListener l) {
         mOnLoadAllSDFilesListener = l;
         getFiles(dir);
+    }
+
+    @Override
+    public void getThumbnails(String url, OnLoadThumbnailListener l) {
+        Observable<ResponseBody> observable = mApiService.getThumbnail(url);
+        ApiManager.getInstance().sendHttp(observable, new CustomObserver<ResponseBody>() {
+            @Override
+            public void onNext(ResponseBody responseBody) {
+                super.onNext(responseBody);
+                try {
+                    byte[] bytes = responseBody.bytes();
+                    l.onLoadThumbnail(bytes,null);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    l.onLoadThumbnail(null,e);
+                }
+            }
+            @Override
+            public void onError(Throwable e) {
+                super.onError(e);
+                l.onLoadThumbnail(null,e);
+            }
+
+            @Override
+            public void onComplete() {
+                super.onComplete();
+            }
+        });
     }
 
     private void getFiles(final String dir) {

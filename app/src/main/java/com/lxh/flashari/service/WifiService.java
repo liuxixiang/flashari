@@ -18,7 +18,6 @@ public class WifiService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.e("test","oncreat");
         Andromeda.registerRemoteService(IOperateWifiAidl.class, OperateWifiImpl.getInstance().asBinder());
     }
 
