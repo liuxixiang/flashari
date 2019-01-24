@@ -60,17 +60,15 @@ public class MainActivity extends AppCompatActivity implements EventListener {
         mRecyclerView = findViewById(R.id.recyclerView);
         mRecyclerView.setLayoutManager(new GridLayoutManager(this, 3));
 
-        findViewById(R.id.textView1).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startService(new Intent(MainActivity.this, WifiService.class));
-            }
-        });
+        findViewById(R.id.textView1).setOnClickListener(v -> startService(new Intent(MainActivity.this, WifiService.class)));
 
         findViewById(R.id.textView2).setOnClickListener(v -> {
-                    useBuyAppleInShop();
+                    getAllSDFiles();
                 }
         );
+
+
+//        getAllSDFiles();
 
     }
 
@@ -99,14 +97,14 @@ public class MainActivity extends AppCompatActivity implements EventListener {
     }
 
 
-    private void useBuyAppleInShop() {
+    private void getAllSDFiles() {
         //IBinder buyAppleBinder = Andromeda.getInstance().getRemoteService(IBuyApple.class);
-        IBinder buyAppleBinder = Andromeda.with(this).getRemoteService(IOperateWifiAidl.class);
-        if (null == buyAppleBinder) {
+        IBinder iBinder = Andromeda.with(this).getRemoteService(IOperateWifiAidl.class);
+        if (null == iBinder) {
             Toast.makeText(this, "buyAppleBinder is null! May be the service has been cancelled!", Toast.LENGTH_SHORT).show();
             return;
         }
-        IOperateWifiAidl operateWifi = IOperateWifiAidl.Stub.asInterface(buyAppleBinder);
+        IOperateWifiAidl operateWifi = IOperateWifiAidl.Stub.asInterface(iBinder);
         if (null != operateWifi) {
             try {
                 operateWifi.getAllSDFiles(rootDir);

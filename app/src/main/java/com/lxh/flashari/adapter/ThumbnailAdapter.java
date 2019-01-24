@@ -40,16 +40,13 @@ public class ThumbnailAdapter extends BaseQuickAdapter<FlashAirFileInfo, BaseVie
 
     @Override
     protected void convert(BaseViewHolder helper, final FlashAirFileInfo item) {
-        Log.e("lxh","convert----");
         item.setThumbnailUrl(IMG_URL + item.getDir() + "/" + item.getFileName());
         helper.setText(R.id.name, item.getFileName() + "");
-        useGetThumbnail(item.getThumbnailUrl(),helper);
+        useGetThumbnail(item.getThumbnailUrl(),helper.getView(R.id.img));
     }
 
     //服务进程获取图片
-    private void useGetThumbnail(String url,BaseViewHolder helper) {
-        ImageView imageView = helper.getView(R.id.img);
-        imageView.setTag(url);
+    private void useGetThumbnail(String url, final ImageView imageView) {
         IBinder iBinder = Andromeda.with(mContext).getRemoteService(IOperateWifiAidl.class);
         if (null == iBinder) {
             return;
@@ -60,20 +57,16 @@ public class ThumbnailAdapter extends BaseQuickAdapter<FlashAirFileInfo, BaseVie
                 operateWifi.getThumbnail(url, new BaseCallback() {
                     @Override
                     public void onSucceed(Bundle bundle) {
-                        if(bundle != null && bundle.containsKey(Config.KeyCode.KEY_THUMBNAIL_BYTE)) {
-                            byte[] bytes = bundle.getByteArray(Config.KeyCode.KEY_THUMBNAIL_BYTE);
-                            ImageView imageView_tag = helper.itemView.findViewWithTag(url);
-                            if(imageView_tag != null) {
-                                Log.e("img","imageView_tag===" + imageView_tag.getTag());
-                                imageView_tag.setTag(null);
-                                ImageLoadUtils.load(mContext, bytes, imageView_tag);
+                        if(bundle != null && bundle.containsKey(Config.KeyCode.KEY_THUMBNAIL_BITMAP)) {
+                            Bitmap bitmap = bundle.getParcelable(Config.KeyCode.KEY_THUMBNAIL_BITMAP);
+                            if(bitmap != null) {
+                                imageView.setImageBitmap(bitmap);
+//                                bitmap.recycle();
                             }
-
                         }
                     }
                     @Override
                     public void onFailed(String bundle) {
-
                     }
                 });
             } catch (Exception ex) {
@@ -81,6 +74,4 @@ public class ThumbnailAdapter extends BaseQuickAdapter<FlashAirFileInfo, BaseVie
             }
         }
     }
-
-
 }

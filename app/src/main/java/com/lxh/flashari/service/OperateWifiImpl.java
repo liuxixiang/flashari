@@ -1,9 +1,13 @@
 package com.lxh.flashari.service;
 
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Parcelable;
-import android.os.RemoteException;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.FutureTarget;
+import com.bumptech.glide.request.RequestOptions;
+import com.lxh.flashari.MyApplication;
 import com.lxh.flashari.common.config.Config;
 import com.lxh.flashari.common.event.EventConstants;
 import com.lxh.flashari.model.OperateWifiModel;
@@ -48,20 +52,37 @@ public class OperateWifiImpl extends IOperateWifiAidl.Stub {
 
     @Override
     public void getThumbnail(String url, IPCCallback callback) {
-        mOperateWifiModel.getThumbnails(url, (imgs, error) -> {
+//        mOperateWifiModel.getThumbnails(url, (imgs, error) -> {
+//            try {
+//                if (error == null && imgs != null && imgs.length > 0) {
+//                    Bundle bundle = new Bundle();
+//                    bundle.putByteArray(Config.KeyCode.KEY_THUMBNAIL_BYTE, imgs);
+//                    callback.onSuccess(bundle);
+//                } else {
+//                    callback.onFail(error == null ? "error": error.toString());
+//                }
+//            } catch (RemoteException e) {
+//                e.printStackTrace();
+//            }
+//
+//        });
+        new Thread(() -> {
+            RequestOptions options = new RequestOptions();
+            options.centerCrop();
+            FutureTarget<Bitmap> futureTarget =
+                    Glide.with(MyApplication.getInstance())
+                            .asBitmap()
+                            .apply(options)
+                            .load(url).submit(350,300);
             try {
-                if (error == null && imgs != null && imgs.length > 0) {
-                    Bundle bundle = new Bundle();
-                    bundle.putByteArray(Config.KeyCode.KEY_THUMBNAIL_BYTE, imgs);
-                    callback.onSuccess(bundle);
-                } else {
-                    callback.onFail(error == null ? "error": error.toString());
-                }
-            } catch (RemoteException e) {
+                Bitmap bitmap = futureTarget.get();
+                Bundle bundle = new Bundle();
+                bundle.putParcelable(Config.KeyCode.KEY_THUMBNAIL_BITMAP, bitmap);
+                callback.onSuccess(bundle);
+            } catch (Exception e) {
                 e.printStackTrace();
             }
-
-        });
+        }).start();
     }
 
 }
