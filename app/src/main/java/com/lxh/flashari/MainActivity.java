@@ -20,8 +20,10 @@ import com.lxh.flashari.api.ApiManager;
 import com.lxh.flashari.common.config.Config;
 import com.lxh.flashari.common.event.EventConstants;
 import com.lxh.flashari.rxjava.CustomObserver;
+import com.lxh.flashari.service.AidiCallback;
 import com.lxh.flashari.service.WifiService;
 import com.lxh.flashari.ui.ImageViewActivity;
+import com.lxh.flashari.utils.AidlUtils;
 import com.lxh.flashari.utils.FlashAirFileInfo;
 import com.lxh.processmodule.IOperateWifiAidl;
 
@@ -77,7 +79,7 @@ public class MainActivity extends AppCompatActivity implements EventListener {
         thumbnailAdapter.setOnItemClickListener((adapter, view, position) -> {
             FlashAirFileInfo flashAirFileInfo = (FlashAirFileInfo) adapter.getItem(position);
             Intent mIntent = new Intent(MainActivity.this, ImageViewActivity.class);
-            mIntent.putExtra("flashAirFileInfo", flashAirFileInfo);
+            mIntent.putExtra(Config.KeyCode.KEY_FILE_INFO, flashAirFileInfo);
             startActivity(mIntent);
         });
         mRecyclerView.setAdapter(thumbnailAdapter);
@@ -98,31 +100,30 @@ public class MainActivity extends AppCompatActivity implements EventListener {
 
 
     private void getAllSDFiles() {
-        //IBinder buyAppleBinder = Andromeda.getInstance().getRemoteService(IBuyApple.class);
-        IBinder iBinder = Andromeda.with(this).getRemoteService(IOperateWifiAidl.class);
-        if (null == iBinder) {
-            Toast.makeText(this, "buyAppleBinder is null! May be the service has been cancelled!", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        IOperateWifiAidl operateWifi = IOperateWifiAidl.Stub.asInterface(iBinder);
-        if (null != operateWifi) {
-            try {
-                operateWifi.getAllSDFiles(rootDir);
-            } catch (Exception ex) {
-                ex.printStackTrace();
+        AidlUtils.useOperateWifiAidl(this, new AidiCallback<IOperateWifiAidl>() {
+            @Override
+            public void onSucceed(IOperateWifiAidl iOperateWifiAidl) {
+                try {
+                    iOperateWifiAidl.getAllSDFiles(rootDir);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
             }
-        }
+
+            @Override
+            public void onFailed(Throwable throwable) {
+
+            }
+        });
     }
 
 
     @Override
     public void onNotify(Event event) {
         if(EventConstants.THUMBNAILS_EVENT.equals(event.getName())) {
-            Log.e("flash","Thread" + Thread.currentThread());
             Bundle bundle = event.getData();
             if(bundle != null && bundle.containsKey(Config.KeyCode.KEY_THUMBNAILS)) {
                 List<FlashAirFileInfo> fileInfos = bundle.getParcelableArrayList(Config.KeyCode.KEY_THUMBNAILS);
-//                mHandler.obtainMessage(1,fileInfos);
                 Message message = new Message();
                 message.what = 1;
                 message.obj = fileInfos;

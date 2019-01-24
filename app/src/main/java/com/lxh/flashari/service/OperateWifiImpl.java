@@ -6,7 +6,6 @@ import android.os.Parcelable;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.FutureTarget;
-import com.bumptech.glide.request.RequestOptions;
 import com.lxh.flashari.MyApplication;
 import com.lxh.flashari.common.config.Config;
 import com.lxh.flashari.common.event.EventConstants;
@@ -67,17 +66,32 @@ public class OperateWifiImpl extends IOperateWifiAidl.Stub {
 //
 //        });
         new Thread(() -> {
-            RequestOptions options = new RequestOptions();
-            options.centerCrop();
             FutureTarget<Bitmap> futureTarget =
                     Glide.with(MyApplication.getInstance())
                             .asBitmap()
-                            .apply(options)
                             .load(url).submit(350,300);
             try {
                 Bitmap bitmap = futureTarget.get();
                 Bundle bundle = new Bundle();
                 bundle.putParcelable(Config.KeyCode.KEY_THUMBNAIL_BITMAP, bitmap);
+                callback.onSuccess(bundle);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
+
+    @Override
+    public void getOriginalImage(String url, IPCCallback callback) {
+        new Thread(() -> {
+            FutureTarget<Bitmap> futureTarget =
+                    Glide.with(MyApplication.getInstance())
+                            .asBitmap()
+                            .load(url).submit(1000,800);
+            try {
+                Bitmap bitmap = futureTarget.get();
+                Bundle bundle = new Bundle();
+                bundle.putParcelable(Config.KeyCode.KEY_ORIGINAL_IMAGE, bitmap);
                 callback.onSuccess(bundle);
             } catch (Exception e) {
                 e.printStackTrace();

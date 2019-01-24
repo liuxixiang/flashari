@@ -7,4 +7,5 @@ import org.qiyi.video.svg.IPCCallback;
 interface IOperateWifiAidl {
     void getAllSDFiles(String url);
     void getThumbnail(String url,IPCCallback callback);
+    void getOriginalImage(String url,IPCCallback callback);
 }

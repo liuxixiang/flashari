@@ -20,6 +20,8 @@ import com.chad.library.adapter.base.BaseViewHolder;
 import com.lxh.flashari.R;
 import com.lxh.flashari.common.BaseCallback;
 import com.lxh.flashari.common.config.Config;
+import com.lxh.flashari.service.AidiCallback;
+import com.lxh.flashari.utils.AidlUtils;
 import com.lxh.flashari.utils.FlashAirFileInfo;
 import com.lxh.flashari.utils.ImageLoadUtils;
 import com.lxh.processmodule.IOperateWifiAidl;
@@ -47,31 +49,34 @@ public class ThumbnailAdapter extends BaseQuickAdapter<FlashAirFileInfo, BaseVie
 
     //服务进程获取图片
     private void useGetThumbnail(String url, final ImageView imageView) {
-        IBinder iBinder = Andromeda.with(mContext).getRemoteService(IOperateWifiAidl.class);
-        if (null == iBinder) {
-            return;
-        }
-        IOperateWifiAidl operateWifi = IOperateWifiAidl.Stub.asInterface(iBinder);
-        if (null != operateWifi) {
-            try {
-                operateWifi.getThumbnail(url, new BaseCallback() {
-                    @Override
-                    public void onSucceed(Bundle bundle) {
-                        if(bundle != null && bundle.containsKey(Config.KeyCode.KEY_THUMBNAIL_BITMAP)) {
-                            Bitmap bitmap = bundle.getParcelable(Config.KeyCode.KEY_THUMBNAIL_BITMAP);
-                            if(bitmap != null) {
-                                imageView.setImageBitmap(bitmap);
+        AidlUtils.useOperateWifiAidl(mContext, new AidiCallback<IOperateWifiAidl>() {
+            @Override
+            public void onSucceed(IOperateWifiAidl iOperateWifiAidl) {
+                try {
+                    iOperateWifiAidl.getThumbnail(url, new BaseCallback() {
+                        @Override
+                        public void onSucceed(Bundle bundle) {
+                            if(bundle != null && bundle.containsKey(Config.KeyCode.KEY_THUMBNAIL_BITMAP)) {
+                                Bitmap bitmap = bundle.getParcelable(Config.KeyCode.KEY_THUMBNAIL_BITMAP);
+                                if(bitmap != null) {
+                                    imageView.setImageBitmap(bitmap);
 //                                bitmap.recycle();
+                                }
                             }
                         }
-                    }
-                    @Override
-                    public void onFailed(String bundle) {
-                    }
-                });
-            } catch (Exception ex) {
-                ex.printStackTrace();
+                        @Override
+                        public void onFailed(String bundle) {
+                        }
+                    });
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
             }
-        }
+
+            @Override
+            public void onFailed(Throwable throwable) {
+//                Toast.makeText(mContext,throwable.getMessage(),Toast.LENGTH_LONG).show();
+            }
+        });
     }
 }
