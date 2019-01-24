@@ -87,6 +87,7 @@ public class ImageViewActivity extends AppCompatActivity {
                         }
                     });
                 } catch (RemoteException e) {
+                    Toast.makeText(ImageViewActivity.this,e.getMessage(),Toast.LENGTH_SHORT).show();
                     e.printStackTrace();
                 }
             }
