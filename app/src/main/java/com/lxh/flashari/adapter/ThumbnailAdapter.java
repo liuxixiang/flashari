@@ -2,6 +2,7 @@ package com.lxh.flashari.adapter;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -59,7 +60,7 @@ public class ThumbnailAdapter extends BaseQuickAdapter<FlashAirFileInfo, BaseVie
                             if(bundle != null && bundle.containsKey(Config.KeyCode.KEY_THUMBNAIL_BITMAP)) {
                                 Bitmap bitmap = bundle.getParcelable(Config.KeyCode.KEY_THUMBNAIL_BITMAP);
                                 if(bitmap != null) {
-                                    imageView.setImageBitmap(bitmap);
+                                    imageView.setBackground(new BitmapDrawable(mContext.getResources(),bitmap));
 //                                bitmap.recycle();
                                 }
                             }

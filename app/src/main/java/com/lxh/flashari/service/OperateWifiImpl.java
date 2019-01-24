@@ -6,6 +6,7 @@ import android.os.Parcelable;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.FutureTarget;
+import com.lxh.flashari.GlideApp;
 import com.lxh.flashari.MyApplication;
 import com.lxh.flashari.common.config.Config;
 import com.lxh.flashari.common.event.EventConstants;
@@ -67,9 +68,10 @@ public class OperateWifiImpl extends IOperateWifiAidl.Stub {
 //        });
         new Thread(() -> {
             FutureTarget<Bitmap> futureTarget =
-                    Glide.with(MyApplication.getInstance())
+                    GlideApp.with(MyApplication.getInstance())
                             .asBitmap()
-                            .load(url).submit(350,300);
+                            .fitCenter()
+                            .load(url).submit(300,300);
             try {
                 Bitmap bitmap = futureTarget.get();
                 Bundle bundle = new Bundle();
