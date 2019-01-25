@@ -24,16 +24,25 @@ import com.lxh.flashari.common.config.Config;
 import com.lxh.flashari.service.AidiCallback;
 import com.lxh.flashari.utils.AidlUtils;
 import com.lxh.flashari.utils.FlashAirFileInfo;
+import com.lxh.flashari.utils.FlashAirUploadManager;
 import com.lxh.flashari.utils.ImageLoadUtils;
 import com.lxh.processmodule.IOperateWifiAidl;
+import com.qiniu.android.http.ResponseInfo;
+import com.qiniu.android.storage.UpCancellationSignal;
+import com.qiniu.android.storage.UpCompletionHandler;
+import com.qiniu.android.storage.UpProgressHandler;
+import com.qiniu.android.storage.UploadOptions;
 
+import org.json.JSONObject;
 import org.qiyi.video.svg.Andromeda;
 
+import java.util.HashMap;
 import java.util.List;
 
 public class ThumbnailAdapter extends BaseQuickAdapter<FlashAirFileInfo, BaseViewHolder> {
     private Context mContext;
     private static final String IMG_URL = "http://flashair/thumbnail.cgi?";
+    private volatile boolean isCancelled = false;
 
 
     public ThumbnailAdapter(Context context, @Nullable List<FlashAirFileInfo> data) {
@@ -46,6 +55,7 @@ public class ThumbnailAdapter extends BaseQuickAdapter<FlashAirFileInfo, BaseVie
         item.setThumbnailUrl(IMG_URL + item.getDir() + "/" + item.getFileName());
         helper.setText(R.id.name, item.getFileName() + "");
         useGetThumbnail(item.getThumbnailUrl(),helper.getView(R.id.img));
+        helper.addOnClickListener(R.id.upload);
     }
 
     //服务进程获取图片

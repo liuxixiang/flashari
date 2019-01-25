@@ -54,4 +54,5 @@ dependencies {
     implementation 'com.github.pwittchen:reactivenetwork-rx2:3.0.2'
     implementation "org.qiyi.video.svg:core:1.1.8"
     api project(":process_module")
+    implementation 'com.qiniu:qiniu-android-sdk:7.3.+'
 }

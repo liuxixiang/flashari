@@ -5,13 +5,11 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -25,12 +23,20 @@ import com.lxh.flashari.service.WifiService;
 import com.lxh.flashari.ui.ImageViewActivity;
 import com.lxh.flashari.utils.AidlUtils;
 import com.lxh.flashari.utils.FlashAirFileInfo;
+import com.lxh.flashari.utils.FlashAirUploadManager;
 import com.lxh.processmodule.IOperateWifiAidl;
+import com.qiniu.android.http.ResponseInfo;
+import com.qiniu.android.storage.UpCancellationSignal;
+import com.qiniu.android.storage.UpCompletionHandler;
+import com.qiniu.android.storage.UpProgressHandler;
+import com.qiniu.android.storage.UploadOptions;
 
+import org.json.JSONObject;
 import org.qiyi.video.svg.Andromeda;
 import org.qiyi.video.svg.event.Event;
 import org.qiyi.video.svg.event.EventListener;
 
+import java.util.HashMap;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements EventListener {
@@ -82,6 +88,9 @@ public class MainActivity extends AppCompatActivity implements EventListener {
             mIntent.putExtra(Config.KeyCode.KEY_FILE_INFO, flashAirFileInfo);
             startActivity(mIntent);
         });
+        thumbnailAdapter.setOnItemChildClickListener((adapter, view, position) -> {
+            FlashAirFileInfo flashAirFileInfo = (FlashAirFileInfo) adapter.getItem(position);
+        });
         mRecyclerView.setAdapter(thumbnailAdapter);
 
     }
@@ -132,4 +141,5 @@ public class MainActivity extends AppCompatActivity implements EventListener {
             }
         }
     }
+
 }

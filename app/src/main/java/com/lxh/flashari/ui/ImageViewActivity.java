@@ -10,15 +10,11 @@ import android.os.Bundle;
 import android.os.RemoteException;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.DataSource;
-import com.bumptech.glide.load.engine.GlideException;
-import com.bumptech.glide.request.RequestListener;
-import com.bumptech.glide.request.target.Target;
 import com.lxh.flashari.R;
 import com.lxh.flashari.api.ApiManager;
 import com.lxh.flashari.common.BaseCallback;
@@ -26,13 +22,21 @@ import com.lxh.flashari.common.config.Config;
 import com.lxh.flashari.rxjava.CustomObserver;
 import com.lxh.flashari.service.AidiCallback;
 import com.lxh.flashari.utils.AidlUtils;
+import com.lxh.flashari.utils.ConvertUtils;
 import com.lxh.flashari.utils.FlashAirFileInfo;
+import com.lxh.flashari.utils.FlashAirUploadManager;
+import com.lxh.flashari.utils.qiniu.Auth;
 import com.lxh.processmodule.IOperateWifiAidl;
+import com.qiniu.android.storage.UploadOptions;
+
+import java.util.HashMap;
 
 public class ImageViewActivity extends AppCompatActivity {
     ImageView imageView;
     Button backButton;
     private FlashAirFileInfo mFlashAirFileInfo;
+    private String fileName;
+    private Bitmap bitmap;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -47,10 +51,16 @@ public class ImageViewActivity extends AppCompatActivity {
         getWindow().setTitleColor(Color.rgb(65, 183, 216));
         backButton.getBackground().setColorFilter(Color.rgb(65, 183, 216), PorterDuff.Mode.SRC_IN);
         if (mFlashAirFileInfo != null) {
-            String fileName = mFlashAirFileInfo.getFileName();
+            fileName = mFlashAirFileInfo.getFileName();
             String directory = mFlashAirFileInfo.getDir();
             downloadFile(fileName, directory);
         }
+
+        backButton.setOnClickListener(v -> {
+            if(bitmap != null) {
+                upload(fileName, ConvertUtils.bitmap2Bytes(bitmap,Bitmap.CompressFormat.JPEG));
+            }
+        });
 
         getBaidu();
 
@@ -74,7 +84,7 @@ public class ImageViewActivity extends AppCompatActivity {
                         public void onSucceed(Bundle bundle) {
                             waitDialog.dismiss();
                             if (bundle != null && bundle.containsKey(Config.KeyCode.KEY_ORIGINAL_IMAGE)) {
-                                Bitmap bitmap = bundle.getParcelable(Config.KeyCode.KEY_ORIGINAL_IMAGE);
+                                bitmap = bundle.getParcelable(Config.KeyCode.KEY_ORIGINAL_IMAGE);
                                 if (bitmap != null) {
                                     imageView.setImageBitmap(bitmap);
                                 }
@@ -87,7 +97,7 @@ public class ImageViewActivity extends AppCompatActivity {
                         }
                     });
                 } catch (RemoteException e) {
-                    Toast.makeText(ImageViewActivity.this,e.getMessage(),Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ImageViewActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
                     e.printStackTrace();
                 }
             }
@@ -111,6 +121,32 @@ public class ImageViewActivity extends AppCompatActivity {
                         Toast.makeText(getApplicationContext(), s, Toast.LENGTH_LONG).show();
                     }
                 });
+    }
+
+    private void upload(String fileName, byte[] picturePath) {
+        final String token = Auth.create(Config.QINIU_ACCESS_KEY, Config.QINIU_SECRET_KEY).uploadToken(Config.BUCKET);
+        HashMap<String, String> map = new HashMap<>();
+        map.put("x:phone", "12345678");
+        Log.d("qiniu", "click upload");
+        FlashAirUploadManager.getInstance().getUploadManager(fileName).put(picturePath, fileName, token,
+                (key, info, res) -> {
+                    Log.i("qiniu", key + ",\r\n " + info
+                            + ",\r\n " + res);
+
+                    if (info.isOK() == true) {
+                            backButton.setText(res.toString());
+                    }
+                }, new UploadOptions(map, null, false,
+                        (key, percent) -> {
+//                                Log.i("qiniu", key + ": " + percent);
+//                                progressbar.setVisibility(View.VISIBLE);
+//                                int progress = (int)(percent*1000);
+////											Log.d("qiniu", progress+"");
+//                                progressbar.setProgress(progress);
+//                                if(progress==1000){
+//                                    progressbar.setVisibility(View.GONE);
+//                                }
+                        }, null));
     }
 
 }
