@@ -1,13 +1,23 @@
 package com.lxh.flashari.model;
 
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.os.Bundle;
+import android.os.Parcelable;
+import android.os.RemoteException;
 import android.text.TextUtils;
 
 import com.lxh.flashari.R;
 import com.lxh.flashari.api.ApiManager;
 import com.lxh.flashari.api.WifiApiService;
+import com.lxh.flashari.common.BaseCallback;
+import com.lxh.flashari.common.config.Config;
 import com.lxh.flashari.rxjava.CustomObserver;
+import com.lxh.flashari.service.AidiCallback;
+import com.lxh.flashari.utils.AidlUtils;
 import com.lxh.flashari.utils.FlashAirFileInfo;
 import com.lxh.flashari.utils.FlashAirUtils;
+import com.lxh.processmodule.IOperateWifiAidl;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -49,16 +59,17 @@ public class OperateWifiModelImpl implements OperateWifiModel {
                 super.onNext(responseBody);
                 try {
                     byte[] bytes = responseBody.bytes();
-                    l.onLoadThumbnail(bytes,null);
+                    l.onLoadThumbnail(bytes, null);
                 } catch (IOException e) {
                     e.printStackTrace();
-                    l.onLoadThumbnail(null,e);
+                    l.onLoadThumbnail(null, e);
                 }
             }
+
             @Override
             public void onError(Throwable e) {
                 super.onError(e);
-                l.onLoadThumbnail(null,e);
+                l.onLoadThumbnail(null, e);
             }
 
             @Override
@@ -113,6 +124,46 @@ public class OperateWifiModelImpl implements OperateWifiModel {
             }
         });
     }
+
+    @Override
+    public void downloadFile(Context context, String downloadFile, String directory, OnDownOriginalImgListener listener) {
+        // Download file
+        String url = ApiManager.BASE_WIFI_PATH + "/" + directory + "/" + downloadFile;
+        AidlUtils.useOperateWifiAidl(context, new AidiCallback<IOperateWifiAidl>() {
+            @Override
+            public void onSucceed(IOperateWifiAidl iOperateWifiAidl) {
+                try {
+                    iOperateWifiAidl.getOriginalImage(url, new BaseCallback() {
+                        @Override
+                        public void onSucceed(Bundle bundle) {
+                            if (bundle != null && bundle.containsKey(Config.KeyCode.KEY_ORIGINAL_IMAGE)) {
+                                Bitmap bitmap = bundle.getParcelable(Config.KeyCode.KEY_ORIGINAL_IMAGE);
+                                if (bitmap != null) {
+                                    listener.onSucceed(bundle, bitmap);
+                                    return;
+                                }
+                            }
+                            listener.onFailed(new Throwable("original image is null"));
+                        }
+
+                        @Override
+                        public void onFailed(String bundle) {
+                            listener.onFailed(new Throwable(bundle + ""));
+                        }
+                    });
+                } catch (RemoteException e) {
+                    listener.onFailed(e);
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onFailed(Throwable throwable) {
+                listener.onFailed(throwable);
+            }
+        });
+    }
+
 
     @Override
     public void cancelAll() {

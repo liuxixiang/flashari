@@ -6,4 +6,5 @@ import com.lxh.flashari.common.base.BaseMvpView;
 
 public interface HomeView extends BaseMvpView {
     void setThumbnailAdapter(ThumbnailAdapter adapter);
+    void showToast(String msg);
 }

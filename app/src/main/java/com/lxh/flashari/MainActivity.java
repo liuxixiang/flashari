@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.widget.Toast;
 
 import com.lxh.flashari.adapter.ThumbnailAdapter;
 import com.lxh.flashari.common.base.BaseActivity;
@@ -46,5 +47,10 @@ public class MainActivity extends BaseActivity<HomeView,HomePresenter> implement
     @Override
     public void setThumbnailAdapter(ThumbnailAdapter adapter) {
         mRecyclerView.setAdapter(adapter);
+    }
+
+    @Override
+    public void showToast(String msg) {
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
     }
 }

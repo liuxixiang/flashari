@@ -34,4 +34,6 @@ dependencies {
     implementation "org.qiyi.video.svg:core:1.1.8"
     api "org.qiyi.video.svg:core:1.1.8"
 
+    compile 'com.daimajia.numberprogressbar:library:1.4@aar'
+
 }
