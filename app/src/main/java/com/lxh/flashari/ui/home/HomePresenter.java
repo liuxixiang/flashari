@@ -5,16 +5,13 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.widget.TextView;
 
-import com.lxh.flashari.MainActivity;
-import com.lxh.flashari.R;
 import com.lxh.flashari.adapter.ThumbnailAdapter;
 import com.lxh.flashari.common.base.BaseMvpPresenter;
 import com.lxh.flashari.common.config.Config;
 import com.lxh.flashari.common.event.EventConstants;
 import com.lxh.flashari.service.AidiCallback;
-import com.lxh.flashari.ui.ImageViewActivity;
+import com.lxh.flashari.ui.originalImg.OriginalImgActivity;
 import com.lxh.flashari.utils.AidlUtils;
 import com.lxh.flashari.utils.FlashAirFileInfo;
 import com.lxh.processmodule.IOperateWifiAidl;
@@ -79,7 +76,7 @@ public class HomePresenter extends BaseMvpPresenter<HomeView> implements EventLi
         ThumbnailAdapter thumbnailAdapter = new ThumbnailAdapter((Context) getView(), fileInfos);
         thumbnailAdapter.setOnItemClickListener((adapter, view, position) -> {
             FlashAirFileInfo flashAirFileInfo = (FlashAirFileInfo) adapter.getItem(position);
-            Intent mIntent = new Intent((Context) getView(), ImageViewActivity.class);
+            Intent mIntent = new Intent((Context) getView(), OriginalImgActivity.class);
             mIntent.putExtra(Config.KeyCode.KEY_FILE_INFO, flashAirFileInfo);
             ((Context) getView()).startActivity(mIntent);
         });
