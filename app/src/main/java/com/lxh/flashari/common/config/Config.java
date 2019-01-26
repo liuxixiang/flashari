@@ -12,4 +12,7 @@ public class Config {
     public static final String QINIU_ACCESS_KEY= "x9x3WNUm0XKCRiTaaV8BMHmlOOoUm2dqoTphiOI9";
     public static final String QINIU_SECRET_KEY= "Bfc0sOsaJpfH3ReAyz7qUmQMFzPYyFO9FJQgZRkz";
     public static final String BUCKET= "flashair";
+
+    public static final String ROOT_DIR = "DCIM";
+
 }

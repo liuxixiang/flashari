@@ -55,4 +55,9 @@ dependencies {
     implementation "org.qiyi.video.svg:core:1.1.8"
     api project(":process_module")
     implementation 'com.qiniu:qiniu-android-sdk:7.3.+'
+
+    //mosby
+    api "com.hannesdorfmann.mosby3:mvp-lce:$rootProject.mosby"
+    api "com.hannesdorfmann.mosby3:mvp-nullobject-presenter:$rootProject.mosby"
+    api "com.hannesdorfmann.mosby3:mvp-queuing-presenter:$rootProject.mosby"
 }

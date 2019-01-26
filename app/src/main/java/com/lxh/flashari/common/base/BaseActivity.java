@@ -1,13 +1,9 @@
 package com.lxh.flashari.common.base;
 
-import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v7.app.AppCompatActivity;
+import com.hannesdorfmann.mosby3.mvp.MvpActivity;
+import com.hannesdorfmann.mosby3.mvp.MvpNullObjectBasePresenter;
 
-public class BaseActivity extends AppCompatActivity {
+public abstract class BaseActivity<V extends BaseMvpView, P extends MvpNullObjectBasePresenter<V>> extends MvpActivity<V,P> {
 
-    @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
+
 }
