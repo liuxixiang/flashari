@@ -3,13 +3,20 @@ package com.lxh.flashari.service;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.os.RemoteException;
+import android.support.annotation.Nullable;
+import android.util.Log;
 
-import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.FutureTarget;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
 import com.lxh.flashari.GlideApp;
 import com.lxh.flashari.MyApplication;
 import com.lxh.flashari.common.config.Config;
 import com.lxh.flashari.common.event.EventConstants;
+import com.lxh.flashari.glide.ProgressInterceptor;
 import com.lxh.flashari.model.OperateWifiModel;
 import com.lxh.flashari.model.OperateWifiModelImpl;
 import com.lxh.processmodule.IOperateWifiAidl;
@@ -71,7 +78,7 @@ public class OperateWifiImpl extends IOperateWifiAidl.Stub {
                     GlideApp.with(MyApplication.getInstance())
                             .asBitmap()
                             .fitCenter()
-                            .load(url).submit(300,300);
+                            .load(url).submit(300, 300);
             try {
                 Bitmap bitmap = futureTarget.get();
                 Bundle bundle = new Bundle();
@@ -86,13 +93,43 @@ public class OperateWifiImpl extends IOperateWifiAidl.Stub {
     @Override
     public void getOriginalImage(String url, IPCCallback callback) {
         new Thread(() -> {
+
+            ProgressInterceptor.addListener(url, (progress, bytesRead, totalBytes) -> {
+//                    progressDialog.setProgress(progress);
+                Log.e("load", "progress=" + progress + "---totalBytes=" + totalBytes + "---bytesRead=" + bytesRead);
+                Bundle bundle = new Bundle();
+                bundle.putInt(Config.KeyCode.KEY_ORIGINAL_PROGRESS, progress);
+                bundle.putLong(Config.KeyCode.KEY_ORIGINAL_TOTAL_BYTES, totalBytes);
+                bundle.putLong(Config.KeyCode.KEY_ORIGINAL_READ_BYTES, bytesRead);
+                try {
+                    callback.onSuccess(bundle);
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+            });
+
             FutureTarget<Bitmap> futureTarget =
-                    Glide.with(MyApplication.getInstance())
+                    GlideApp.with(MyApplication.getInstance())
                             .asBitmap()
-                            .load(url).submit(1000,800);
+                            .listener(new RequestListener<Bitmap>() {
+                                @Override
+                                public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Bitmap> target, boolean isFirstResource) {
+                                    ProgressInterceptor.removeListener(url);
+                                    return false;
+                                }
+
+                                @Override
+                                public boolean onResourceReady(Bitmap resource, Object model, Target<Bitmap> target, DataSource dataSource, boolean isFirstResource) {
+                                    ProgressInterceptor.removeListener(url);
+                                    return false;
+                                }
+                            })
+                            .load(url).submit();
             try {
                 Bitmap bitmap = futureTarget.get();
                 Bundle bundle = new Bundle();
+                Log.e("load", "bitmap=="+bitmap);
+
                 bundle.putParcelable(Config.KeyCode.KEY_ORIGINAL_IMAGE, bitmap);
                 callback.onSuccess(bundle);
             } catch (Exception e) {

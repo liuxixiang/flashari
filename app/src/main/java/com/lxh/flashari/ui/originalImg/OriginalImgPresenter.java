@@ -58,7 +58,6 @@ public class OriginalImgPresenter extends BaseMvpPresenter<OriginalImgView> {
     }
 
     public void downloadFile(String downloadFile, String directory) {
-        getView().showWaitDialog();
         // Download file
         String url = ApiManager.BASE_WIFI_PATH + "/" + directory + "/" + downloadFile;
         AidlUtils.useOperateWifiAidl((Context) getView(), new AidiCallback<IOperateWifiAidl>() {
@@ -68,31 +67,31 @@ public class OriginalImgPresenter extends BaseMvpPresenter<OriginalImgView> {
                     iOperateWifiAidl.getOriginalImage(url, new BaseCallback() {
                         @Override
                         public void onSucceed(Bundle bundle) {
-                            getView().waitDialogDismiss();
-                            if (bundle != null && bundle.containsKey(Config.KeyCode.KEY_ORIGINAL_IMAGE)) {
-                                mBitmap = bundle.getParcelable(Config.KeyCode.KEY_ORIGINAL_IMAGE);
-                                if (mBitmap != null) {
-                                    getView().setOriginalImg(mBitmap);
+                            if (bundle != null) {
+                                int progress = bundle.getInt(Config.KeyCode.KEY_ORIGINAL_PROGRESS);
+                                getView().setNumProgress(progress);
+                                if (bundle.containsKey(Config.KeyCode.KEY_ORIGINAL_IMAGE)) {
+                                    mBitmap = bundle.getParcelable(Config.KeyCode.KEY_ORIGINAL_IMAGE);
+                                    if (mBitmap != null) {
+                                        getView().setOriginalImg(mBitmap);
+                                    }
                                 }
                             }
                         }
 
                         @Override
                         public void onFailed(String bundle) {
-                            getView().waitDialogDismiss();
                         }
                     });
                 } catch (RemoteException e) {
                     getView().showToast(e.getMessage());
                     e.printStackTrace();
                 } finally {
-                    getView().waitDialogDismiss();
                 }
             }
 
             @Override
             public void onFailed(Throwable throwable) {
-                getView().waitDialogDismiss();
             }
         });
     }

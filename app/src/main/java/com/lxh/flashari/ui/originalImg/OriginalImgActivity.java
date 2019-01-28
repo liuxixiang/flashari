@@ -8,6 +8,7 @@ import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -16,13 +17,15 @@ import com.lxh.flashari.R;
 import com.lxh.flashari.common.base.BaseActivity;
 import com.lxh.flashari.common.config.Config;
 import com.lxh.flashari.utils.FlashAirFileInfo;
+import com.lxh.flashari.widget.CircleProgressView;
 
 public class OriginalImgActivity extends BaseActivity<OriginalImgView,OriginalImgPresenter> implements OriginalImgView {
     ImageView imageView;
     Button backButton;
     private FlashAirFileInfo mFlashAirFileInfo;
     private String fileName;
-    private ProgressDialog waitDialog;
+    private CircleProgressView progressView;
+    private Bitmap bitmap;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -30,6 +33,7 @@ public class OriginalImgActivity extends BaseActivity<OriginalImgView,OriginalIm
         setContentView(R.layout.activity_image_view);
         imageView = findViewById(R.id.imageView1);
         backButton = findViewById(R.id.button2);
+        progressView = findViewById(R.id.progressView);
         getWindow().setTitleColor(Color.rgb(65, 183, 216));
         backButton.getBackground().setColorFilter(Color.rgb(65, 183, 216), PorterDuff.Mode.SRC_IN);
         Intent intent = getIntent();
@@ -39,7 +43,12 @@ public class OriginalImgActivity extends BaseActivity<OriginalImgView,OriginalIm
         if (mFlashAirFileInfo != null) {
             fileName = mFlashAirFileInfo.getFileName();
             String directory = mFlashAirFileInfo.getDir();
+            bitmap = mFlashAirFileInfo.getThumbnail();
             presenter.downloadFile(fileName, directory);
+        }
+
+        if(bitmap != null) {
+            imageView.setImageBitmap(bitmap);
         }
 
         backButton.setOnClickListener(v -> {
@@ -55,24 +64,6 @@ public class OriginalImgActivity extends BaseActivity<OriginalImgView,OriginalIm
     }
 
     @Override
-    public void showWaitDialog() {
-        // Setting ProgressDialog
-        if(waitDialog == null) {
-            waitDialog = new ProgressDialog(this);
-        }
-        waitDialog.setMessage("Now downloading...");
-        waitDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-        waitDialog.show();
-    }
-
-    @Override
-    public void waitDialogDismiss() {
-        if(waitDialog != null) {
-            waitDialog.dismiss();
-        }
-    }
-
-    @Override
     public void showToast(String msg) {
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
     }
@@ -83,4 +74,13 @@ public class OriginalImgActivity extends BaseActivity<OriginalImgView,OriginalIm
             imageView.setImageBitmap(bitmap);
         }
     }
+
+    @Override
+    public void setNumProgress(int progress) {
+        if(progressView != null) {
+            progressView.setProgress(progress);
+            progressView.setVisibility(progress ==100 || progress== 0 ?View.GONE:View.VISIBLE);
+        }
+    }
+
 }

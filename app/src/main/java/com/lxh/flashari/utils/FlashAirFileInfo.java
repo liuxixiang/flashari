@@ -1,5 +1,6 @@
 package com.lxh.flashari.utils;
 
+import android.graphics.Bitmap;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.text.format.DateFormat;
@@ -27,6 +28,7 @@ public class FlashAirFileInfo implements Parcelable {
     private int minute;
     private int second;
     private String date;
+    private Bitmap thumbnail;
 
     public FlashAirFileInfo(String info, String dir) {
         int start;
@@ -167,7 +169,13 @@ public class FlashAirFileInfo implements Parcelable {
         this.date = date;
     }
 
+    public Bitmap getThumbnail() {
+        return thumbnail;
+    }
 
+    public void setThumbnail(Bitmap thumbnail) {
+        this.thumbnail = thumbnail;
+    }
 
     public boolean isDirectory() {
         return (attribute & ATTR_MASK_DIRECTORY) > 0;
@@ -199,6 +207,7 @@ public class FlashAirFileInfo implements Parcelable {
         dest.writeInt(this.minute);
         dest.writeInt(this.second);
         dest.writeString(this.date);
+        dest.writeParcelable(this.thumbnail, flags);
     }
 
     protected FlashAirFileInfo(Parcel in) {
@@ -214,6 +223,7 @@ public class FlashAirFileInfo implements Parcelable {
         this.minute = in.readInt();
         this.second = in.readInt();
         this.date = in.readString();
+        this.thumbnail = in.readParcelable(Bitmap.class.getClassLoader());
     }
 
     public static final Creator<FlashAirFileInfo> CREATOR = new Creator<FlashAirFileInfo>() {
